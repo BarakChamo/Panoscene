@@ -1,50 +1,87 @@
-import 'aframe';
-import 'aframe-animation-component';
-import 'aframe-particle-system-component';
-import 'babel-polyfill';
-import {Entity, Scene} from 'aframe-react';
-import React from 'react';
-import ReactDOM from 'react-dom';
+import 'aframe'
+import 'aframe-animation-component'
+import 'aframe-particle-system-component'
+import 'aframe-text-geometry-component'
+import 'babel-polyfill'
+import { Entity, Scene } from 'aframe-react'
+import React from 'react'
+import ReactDOM from 'react-dom'
 
 class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {color: 'red'};
+  state = {
+      videoId: '#v1',
+      zoomed: undefined,
   }
 
-  changeColor() {
-    const colors = ['red', 'orange', 'yellow', 'green', 'blue'];
-    this.setState({
-      color: colors[Math.floor(Math.random() * colors.length)]
-    });
+  onClick = (e) => {
+    this.setState({ videoId: `#v${e.target.id.split("sphere")[1]}` })
   }
+
+  onMouseEnter = (e) => {
+    this.setState({ zoomed: +e.target.id.split("sphere")[1] })
+  }
+
+  onMouseLeave = () => {
+    this.setState({zoomed: 0})
+  }
+
+  renderSphere = (i, rotation) => {
+    const animate = i === this.state.zoomed
+
+    return (
+    <Entity
+      rotation={`0 ${rotation} 0`}
+      events={{
+        click: this.onClick,
+        mouseenter: this.onMouseEnter,
+        mouseleave: this.onMouseLeave,
+      }}
+    >
+      <a-sphere
+        id={`sphere${i}`}
+        src={`#v${i}`}
+        opacity="0.6"
+        material="metalness: 0.3;"
+        animation__rotate="property: rotation; dur: 10000; loop: true; to: 0 360 0; easing: linear;"
+        position="0 1.5 -5"
+      >
+        { animate && (
+          [<a-animation attribute="material.opacity" from="0.6" to="1.0" />, <a-animation attribute="position" from="0 1.5 -5" to="0 1.5 -3.5"/>]
+        )}
+        {!animate && (
+          [<a-animation attribute="material.opacity" from="1.0" to="0.6"/>, <a-animation attribute="position" from="0 1.5 -3.5" to="0 1.5 -5" />]
+        )}
+      </a-sphere>
+    </Entity>
+  )}
 
   render () {
     return (
       <Scene>
         <a-assets>
-          <img id="groundTexture" src="https://cdn.aframe.io/a-painter/images/floor.jpg"/>
-          <img id="skyTexture" src="https://cdn.aframe.io/a-painter/images/sky.jpg"/>
+          <video id="v1" src="/1.mp4" loop autoPlay muted={this.state.videoId === 'v1'} />
+          <video id="v2" src="/2.mp4" loop autoPlay muted={this.state.videoId === 'v2'} />
+          <video id="v3" src="/3.mp4" loop autoPlay muted={this.state.videoId === 'v3'} />
+          <video id="v4" src="/4.mp4" loop autoPlay muted={this.state.videoId === 'v4'} />
+          <video id="v5" src="/5.mp4" loop autoPlay muted={this.state.videoId === 'v5'} />
+
+          <a-mixin id="unfade" attribute="material.opacity" from="0.6" to="1.0"></a-mixin>
+          <a-mixin id="fade" attribute="material.opacity" from="1.0" to="0.6"></a-mixin>
+          <a-asset-item id="font" src="/typeface.json"></a-asset-item>
         </a-assets>
 
-        <Entity primitive="a-plane" src="#groundTexture" rotation="-90 0 0" height="100" width="100"/>
         <Entity primitive="a-light" type="ambient" color="#445451"/>
         <Entity primitive="a-light" type="point" intensity="2" position="2 4 4"/>
-        <Entity primitive="a-sky" height="2048" radius="30" src="#skyTexture" theta-length="90" width="2048"/>
-        <Entity particle-system={{preset: 'snow', particleCount: 2000}}/>
-        <Entity text={{value: 'Hello, A-Frame React!', align: 'center'}} position={{x: 0, y: 2, z: -1}}/>
 
-        <Entity id="box"
-          geometry={{primitive: 'box'}}
-          material={{color: this.state.color, opacity: 0.6}}
-          animation__rotate={{property: 'rotation', dur: 2000, loop: true, to: '360 360 360'}}
-          animation__scale={{property: 'scale', dir: 'alternate', dur: 100, loop: true, to: '1.1 1.1 1.1'}}
-          position={{x: 0, y: 1, z: -3}}
-          events={{click: this.changeColor.bind(this)}}>
-          <Entity animation__scale={{property: 'scale', dir: 'alternate', dur: 100, loop: true, to: '2 2 2'}}
-                  geometry={{primitive: 'box', depth: 0.2, height: 0.2, width: 0.2}}
-                  material={{color: '#24CAFF'}}/>
-        </Entity>
+        <a-videosphere src={this.state.videoId} />
+
+        <a-entity position="-0.8 2 -1" text-geometry="font: #font; value: Choose a Panoscene; bevelEnabled: true; bevelSize: 0.005; bevelThickness: 0.005; curveSegments: 12; size: 0.15; height: 0;" material="color:white; metalness:0.5; roughness: 0;" opacity="0.66" scale="" visible=""></a-entity>
+
+        {this.renderSphere(1, 0)}
+        {this.renderSphere(2, -30)}
+        {this.renderSphere(3, -60)}
+        {this.renderSphere(4, 30)}
+        {this.renderSphere(5, 60)}
 
         <Entity primitive="a-camera">
           <Entity primitive="a-cursor" animation__click={{property: 'scale', startEvents: 'click', from: '0.1 0.1 0.1', to: '1 1 1', dur: 150}}/>
@@ -54,4 +91,4 @@ class App extends React.Component {
   }
 }
 
-ReactDOM.render(<App/>, document.querySelector('#sceneContainer'));
+ReactDOM.render(<App/>, document.querySelector('#sceneContainer'))
